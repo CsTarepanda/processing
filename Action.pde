@@ -1,22 +1,27 @@
 abstract class Action{
-  float speed, angle;
+  /* float speed, angle; */
+  Vector2D vector2D;
 }
 
 abstract class Move extends Action{
   float factor;
-  Move(float speed, float angle, float factor){
-    super.speed = speed;
-    super.angle = angle;
+  Bound bound;
+  Move(float speed, float angle, float factor, Bound bound){
+    /* super.speed = speed; */
+    /* super.angle = angle; */
+    super.vector2D = new Vector2D();
+    super.vector2D.setPolar(speed, angle);
     this.factor = factor;
+    this.bound = bound;
+    this.bound.vector2D = this.vector2D;
   }
 
-  float[] getDirection(){
-    return new float[]{this.speed, this.angle};
+  Vector2D getVector2D(){
+    return this.vector2D;
   }
 
-  void setDirection(float[] direction){
-    super.speed = direction[0];
-    super.angle = direction[1];
+  void boundAction(float[] moveState){
+    this.vector2D = this.bound.action(moveState);
   }
 
   abstract float[] action(float[] moveState);
@@ -32,38 +37,35 @@ abstract class Bound extends Action{
     this.bottomEnd = bottomEnd;
     this.coefficient = coefficient;
   }
-  abstract float left(float direction);
-  abstract float top(float direction);
-  abstract float right(float direction);
-  abstract float bottom(float direction);
-  float[] action(float[] moveState, float[] direction){
-    direction[1] = adjustAngle(direction[1]);
+  abstract float left(float angle);
+  abstract float top(float angle);
+  abstract float right(float angle);
+  abstract float bottom(float angle);
+  Vector2D action(float[] moveState){
+    float speed = (float)super.vector2D.speed();
+    float angle = (float)super.vector2D.angle();
     moveState[2] /= 2;
-    if(90 <= direction[1] && direction[1] < 270){
+    if(90 <= angle && angle < 270){
       if(leftEnd != -1 && moveState[0] <= leftEnd + moveState[2]){
-        direction[1] = this.left(direction[1]);
-        direction[0] *= coefficient;
+        vector2D.setPolar(speed * coefficient, this.left(angle));
       }
     }
-    if(180 <= direction[1] && direction[1] < 360){
+    if(180 <= angle && angle < 360){
       if(topEnd != -1 && moveState[1] <= topEnd + moveState[2]){
-        direction[1] = this.top(direction[1]);
-        direction[0] *= coefficient;
+        vector2D.setPolar(speed * coefficient, this.top(angle));
       }
     }
-    if((270 <= direction[1] && direction[1] < 360) || (0 <= direction[1] && direction[1] < 90)){
+    if((270 <= angle && angle < 360) || (0 <= angle && angle < 90)){
       if(rightEnd != -1 && rightEnd - moveState[2] <= moveState[0]){
-        direction[1] = this.right(direction[1]);
-        direction[0] *= coefficient;
+        vector2D.setPolar(speed * coefficient, this.right(angle));
       }
     }
-    if(0 <= direction[1] && direction[1] < 180){
+    if(0 <= angle && angle < 180){
       if(bottomEnd != -1 && bottomEnd - moveState[2] <= moveState[1]){
-        direction[1] = this.bottom(direction[1]);
-        direction[0] *= coefficient;
+        vector2D.setPolar(speed * coefficient, this.bottom(angle));
       }
     }
-    direction[1] = adjustAngle(direction[1]);
-    return direction;
+    moveState[2] *= 2;
+    return vector2D;
   }
 }

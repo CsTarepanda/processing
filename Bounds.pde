@@ -3,17 +3,17 @@ class StraightBound extends Bound{
     super(leftEnd, topEnd, rightEnd, bottomEnd, coefficient);
   }
 
-  float left(float direction){
-    return 540 - direction;
+  float left(float angle){
+    return 540 - angle;
   }
-  float top(float direction){
-    return 360 - direction;
+  float top(float angle){
+    return 360 - angle;
   }
-  float right(float direction){
-    return 540 - direction;
+  float right(float angle){
+    return 540 - angle;
   }
-  float bottom(float direction){
-    return 360 - direction;
+  float bottom(float angle){
+    return 360 - angle;
   }
 }
 

@@ -13,17 +13,39 @@ void setup(){
 }
 
 void mousePressed(){
-  frontParticles.add(new FireParticle(
+  frontParticles.add(new ParticleObj(
         mouseX, mouseY,
-        50,
-        new Ellipse(new color[]{color(255, 170), color(0)}),
-        new WaveMove(5, random(360), 3.0, 10),
-        new StraightBound(0, 0, width, height, 0.6)
+        50, 
+        new Ellipse(new color[]{color(255, 170)}),
+        new FallMove(
+          5, random(360), 0.1,
+          new StraightBound(
+            -1, 0, -1, height, 1.0
+            ))
+        ));
+  enemys.add(new EnemyObj(
+        mouseX, mouseY,
+        70,
+        new Ellipse(new color[]{color(255, 0, 0, 170)}),
+        new FallMove(
+          5, random(360), 0.1,
+          new StraightBound(
+            -1, 0, -1, height, 1.0
+            ))
         ));
 }
 
 void keyPressed(){
   inf.damage(5);
+  bullets.add(new BulletObj(
+        mouseX, mouseY,
+        30,
+        new Ellipse(new color[]{color(255, 100, 200, 170)}),
+        stopMove()
+        ));
+  if(key == 'r'){
+    inf = new Information(500);
+  }
 }
 
 void draw(){
@@ -31,6 +53,14 @@ void draw(){
   objUpdate(backParticles);
   objUpdate(bullets);
   objUpdate(enemys);
+
+  // draw area  start---------- 
+  if(mousePressed){
+    evaporationSample(mouseX, mouseY, 30, new color[]{color(255, 100, 0, 100)});
+    evaporationSample(mouseX, mouseY, 90, new color[]{color(255, 0, 0, 100)});
+  }
+  // draw area  end------------
+
   objUpdate(frontParticles);
   objUpdate(bars);
   inf.update();
@@ -41,4 +71,13 @@ float adjustAngle(float angle){
     if(angle < 0)
       angle = 360 + angle;
     return angle;
+}
+
+Move stopMove(){
+  return new StraightMove(
+      0, 0, 0.0,
+      new StraightBound(
+        -1, -1, -1, -1, 0.0
+        )
+      );
 }
