@@ -45,8 +45,36 @@ class WaveMove extends Move{
   }
 }
 
+class EvaporateMove extends Move{
+  EvaporateMove(float speed, float angle, float factor, Bound bound){
+    super(speed, angle, factor, bound);
+  }
+  EvaporateMove(float speed){
+    super(speed, 0, 0, new StraightBound(-1, -1, -1, -1, 0));
+  }
+  float[] action(float[] moveState){
+    moveState[2] -= super.vector2D.speed();
+    return moveState;
+  }
+}
+
+class LimitMove extends Move{
+  int callTime = millis();
+  float limitTime;
+  LimitMove(float speed, float angle, float factor, Bound bound){
+    super(speed, angle, factor, bound);
+  }
+  LimitMove(float limitTime){
+    super(0, 0, 0, new StraightBound(-1, -1, -1, -1, 0));
+    this.limitTime = limitTime * 1000;
+  }
+  float[] action(float[] moveState){
+    if(millis() - this.callTime > limitTime) moveState[2] = 0;
+    return moveState;
+  }
+}
+
 class FallMove extends Move{
-  float xSpeed, ySpeed;
   FallMove(float speed, float angle, float factor, Bound bound){
     super(speed, angle, factor, bound);
   }
@@ -60,7 +88,6 @@ class FallMove extends Move{
 }
 
 class RiseMove extends Move{
-  float xSpeed, ySpeed;
   RiseMove(float speed, float angle, float factor, Bound bound){
     super(speed, angle, factor, bound);
   }
@@ -73,3 +100,22 @@ class RiseMove extends Move{
   }
 }
 
+class CustomMove extends Move{
+  Move[] moves;
+  CustomMove(float speed, float angle, float factor, Bound bound){
+    super(speed, angle, factor, bound);
+  }
+  CustomMove(Move... moves){
+    super(0, 0, 0, new StraightBound(-1, -1, -1, -1, 0));
+    for(Move m: moves)
+      m.vector2D.speed(m.vector2D.speed() / moves.length);
+    this.moves = moves;
+  }
+  float[] action(float[] moveState){
+    for(Move m: moves){
+      super.vector2D = m.vector2D;
+      moveState = m.action(moveState);
+    }
+    return moveState;
+  }
+}

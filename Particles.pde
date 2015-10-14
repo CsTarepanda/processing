@@ -4,7 +4,7 @@ class Ellipse extends ParticleFigure{
   }
   void update(float xPos, float yPos, float dia){
     noStroke();
-    fill(col[0]);
+    fill(super.col[0]);
     ellipse(xPos, yPos, dia, dia);
   }
 }

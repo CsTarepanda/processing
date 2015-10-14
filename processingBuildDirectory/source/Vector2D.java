@@ -79,10 +79,32 @@ public class Vector2D{
 		return (float)this.angle;
 	}
 	public double xVector(){
+		if(this.speed < 0)
+			return -this.speed * Math.cos(Math.toRadians(this.angle + 180));
 		return this.speed * Math.cos(Math.toRadians(this.angle));
 	}
 	public double yVector(){
+		if(this.speed < 0)
+			return -this.speed * Math.sin(Math.toRadians(this.angle + 180));
 		return this.speed * Math.sin(Math.toRadians(this.angle));
+	}
+
+	public void xReflect(float coefficient){
+		this.xSpeed *= -coefficient;
+		this.calcPolar();
+	}
+	public void xReflect(){
+		this.xSpeed *= -1.0;
+		this.calcPolar();
+	}
+
+	public void yReflect(float coefficient){
+		this.ySpeed *= -coefficient;
+		this.calcPolar();
+	}
+	public void yReflect(){
+		this.ySpeed *= -1.0;
+		this.calcPolar();
 	}
 
 	public void add(Vector2D... vector2D){

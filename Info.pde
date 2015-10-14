@@ -13,22 +13,31 @@ class Information{
   void update(){
     textAlign(CORNER, CORNER);
     textSize(20);
-    fill(255, 255, 255, 100);
     noStroke();
+    fill(255, 255, 255, 100);
     if(this.hp > 0){
-      rect(10, 10, this.hpBar * this.hp, 20);
-      text((int)hp +" / "+ maxHp, 20, 27);
+      drawHp();
+      drawScore();
     }else{
-      gameEnd = true;
-      text((int)hp +" / "+ maxHp, 20, 27);
-      textAlign(CENTER, CENTER);
-      textSize(50);
-      text("end", width/2, height/2);
+      drawEnd();
     }
   }
 
-  private void test(){
-    println(5);
+  private void drawScore(){
+    text(this.score, 20, 57);
+  }
+
+  private void drawHp(){
+    rect(10, 10, this.hpBar * this.hp, 20);
+    text((int)hp +" / "+ this.maxHp, 20, 27);
+  }
+
+  private void drawEnd(){
+    this.gameEnd = true;
+    text((int)this.hp +" / "+ this.maxHp, 20, 27);
+    textAlign(CENTER, CENTER);
+    textSize(50);
+    text("end", width/2, height/2);
   }
 
   void damage(float damage){
@@ -37,6 +46,6 @@ class Information{
   }
 
   void addScore(float score){
-    if(!gameEnd) this.score += score;
+    if(!this.gameEnd) this.score += score;
   }
 }

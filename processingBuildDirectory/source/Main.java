@@ -23,47 +23,82 @@ ArrayList<ParticleObj> backParticles = new ArrayList<ParticleObj>();
 ArrayList<ParticleObj> frontParticles = new ArrayList<ParticleObj>();
 ArrayList<BarObj> bars = new ArrayList<BarObj>();
 Information inf;
+int[] myBulletCol = {color(255, 200, 100, 170), color(255, 200, 255, 170), color(255)};
+
+Counter rotateCount = new Counter(0, 360);
 public void setup(){
   size(500, 750);
   textAlign(CORNER, CORNER);
   textSize(20);
   inf = new Information(50);
+  bars.add(new BarObj(width/2, height - 20, 70, 
+        new Simple(new int[]{color(0, 170, 255, 170)})));
+  bars.add(new BarObj(width/2, height - 40, 70, 
+        new Simple(new int[]{color(0, 170, 255, 170)})));
 }
 
 public void mousePressed(){
-  frontParticles.add(new ParticleObj(
-        mouseX, mouseY,
-        50, 
-        new Ellipse(new int[]{color(255, 170)}),
-        new FallMove(
-          5, random(360), 0.1f,
-          new StraightBound(
-            -1, 0, -1, height, 1.0f
-            ))
-        ));
-  enemys.add(new EnemyObj(
-        mouseX, mouseY,
-        70,
-        new Ellipse(new int[]{color(255, 0, 0, 170)}),
-        new FallMove(
-          5, random(360), 0.1f,
-          new StraightBound(
-            -1, 0, -1, height, 1.0f
-            ))
-        ));
-}
-
-public void keyPressed(){
-  inf.damage(5);
   bullets.add(new BulletObj(
         mouseX, mouseY,
         30,
         new Ellipse(new int[]{color(255, 100, 200, 170)}),
-        stopMove()
+        new FallMove(3, 90, 0.3f,
+          new StraightBound(0, -1, width, -1, 1.0f)
+          )
         ));
-  if(key == 'r'){
-    inf = new Information(500);
-    bullets.get(0);
+}
+
+boolean a, d, h, l;
+public void keyPressed(){
+  /* inf.damage(5); */
+  if(!a && key == 'a') a = true;
+  else if(!d && key == 'd') d = true;
+  else if(!h && key == 'h') h = true;
+  else if(!l && key == 'l') l = true;
+  else{
+    if(key == 'r'){
+      inf = new Information(500);
+    }else{
+      frontParticles.add(new ParticleObj(
+            mouseX, mouseY,
+            50, 
+            new Ellipse(new int[]{color(255, 170)}),
+            new FallMove(
+              5, random(360), 0.1f,
+              new StraightBound(
+                -1, 0, -1, height, 1.0f
+                ))
+            ));
+      enemys.add(new EnemyObj(
+            mouseX, mouseY,
+            70,
+            new Ellipse(new int[]{color(255, 0, 0, 170)}),
+            new FallMove(
+              5, random(360), 0.1f,
+              new StraightBound(
+                0, 0, width, height, 0.8f
+                ))
+            ));
+    }
+  }
+}
+
+public void keyReleased(){
+  switch(key){
+    case 'a':
+      a = false;
+      break;
+    case 'd':
+      d = false;
+      break;
+    case 'h':
+      h = false;
+      break;
+    case 'l':
+      l = false;
+      break;
+    default:
+      break;
   }
 }
 
@@ -74,7 +109,49 @@ public void draw(){
   objUpdate(enemys);
 
   // draw area  start---------- 
+  if(a) bars.get(0).leftDisplace(3);
+  if(d) bars.get(0).rightDisplace(3);
+  if(h) bars.get(1).leftDisplace(3);
+  if(l) bars.get(1).rightDisplace(3);
+
+  /* bullets.add(new JointBullet( */
+  /*       mouseX, mouseY, */
+  /*       10, */
+  /*       new SimpleBullet(new color[]{color(100, 255, 255, 200)}), */
+  /*       new FallMove( */
+  /*         10, rotateCount.countUp(80), 0.3, */
+  /*         new StraightBound( */
+  /*           0, 0, width, height, 0.8 */
+  /*           ) */
+  /*         ) */
+  /*       )); */
+
+  /* for(Obj obj: bullets) */
+  /*   if(obj.getTime() > 3) obj.delete(); */
+  /* if(enemys.size() < 5) */
+  /*   enemys.add(new EnemyObj( */
+  /*         width/2, height/2, */
+  /*         70, */
+  /*         new Ellipse(new color[]{color(255, 0, 200, 170)}), */
+  /*         new FallMove( */
+  /*           5, random(360), 0.1, */
+  /*           new StraightBound( */
+  /*             0, 0, width, height, 0.8 */
+  /*             )), */
+  /*         10 */
+  /*         )); */
   if(mousePressed){
+    bullets.add(new BulletObj(
+          mouseX, mouseY, 30, 
+          new SimpleBullet(new int[]{color(255, 170)}),
+          new CustomMove(
+            new EvaporateMove(1),
+            new StraightMove(5, 90, 0.0f,
+              new StraightBound(0, 0, width, height, 1.0f)),
+            new FallMove(5, random(30, 50), 0.3f,
+              new StraightBound(0, 0, width, height, 1.0f))
+            )
+          ));
     evaporationSample(mouseX, mouseY, 30, new int[]{color(255, 100, 0, 100)});
     evaporationSample(mouseX, mouseY, 90, new int[]{color(255, 0, 0, 100)});
   }
@@ -82,6 +159,7 @@ public void draw(){
 
   objUpdate(frontParticles);
   objUpdate(bars);
+  /* inf.addScore(5); */
   inf.update();
 }
 
@@ -148,27 +226,42 @@ abstract class Bound extends Action{
     float angle = (float)super.vector2D.angle();
     moveState[2] /= 2;
     if(90 <= angle && angle < 270){
-      if(leftEnd != -1 && moveState[0] <= leftEnd + moveState[2]){
+      if(leftEnd != -1 && moveState[0] <= leftEnd + moveState[2] - super.vector2D.xSpeed()){
+        moveState[0] = moveState[2];
         vector2D.setPolar(speed * coefficient, this.left(angle));
       }
     }
     if(180 <= angle && angle < 360){
-      if(topEnd != -1 && moveState[1] <= topEnd + moveState[2]){
+      if(topEnd != -1 && moveState[1] <= topEnd + moveState[2] - super.vector2D.ySpeed()){
+        moveState[1] = moveState[2];
         vector2D.setPolar(speed * coefficient, this.top(angle));
       }
     }
     if((270 <= angle && angle < 360) || (0 <= angle && angle < 90)){
-      if(rightEnd != -1 && rightEnd - moveState[2] <= moveState[0]){
+      if(rightEnd != -1 && rightEnd - moveState[2] - super.vector2D.xSpeed() <= moveState[0]){
+        moveState[0] = width - moveState[2];
         vector2D.setPolar(speed * coefficient, this.right(angle));
       }
     }
     if(0 <= angle && angle < 180){
-      if(bottomEnd != -1 && bottomEnd - moveState[2] <= moveState[1]){
+      if(bottomEnd != -1 && bottomEnd - moveState[2] - super.vector2D.ySpeed() <= moveState[1]){
+        moveState[1] = height - moveState[2];
         vector2D.setPolar(speed * coefficient, this.bottom(angle));
       }
     }
     moveState[2] *= 2;
     return vector2D;
+  }
+}
+
+class Simple extends BarFigure{
+  Simple(int[] col){
+    super(col);
+  }
+  public void update(float xPos, float yPos, float dia){
+    noStroke();
+    fill(col[0]);
+    rect(xPos - dia/2, yPos - 5, dia, 10);
   }
 }
 class StraightBound extends Bound{
@@ -214,16 +307,84 @@ class RandomBound extends Bound{
 /*     super(leftEnd, topEnd, rightEnd, bottomEnd, coefficient); */
 /*   } */
 /* } */
+class JointBullet extends BulletObj{
+  boolean through = true;
+  JointBullet(float xPos, float yPos, float dia, Figure figure, Move move){
+    super(xPos, yPos, dia, figure, move, 0);
+  }
+  JointBullet(float xPos, float yPos, float dia, Figure figure, Move move, float damage){
+    super(xPos, yPos, dia, figure, move, damage);
+  }
 
+  public boolean update(){
+    super.playerHit();
+    super.figureUpdate();
+    if(!this.through) 
+      for(EnemyObj obj: enemys)
+        if(this.catchCollision(obj)){
+          obj.damage(this.damage);
+          for(int i = 0; i < 5; i++)
+            fireSample(super.xPos, super.yPos, this.dia, figure.col);
+          super.delete();
+        }
+    super.setMoveState(super.move.action(super.getMoveState()));
+    if(super.catchDiaZero())
+      super.delete();
+    if(super.catchOutOfScreen())
+      super.delete();
+    if(super.getTime() > 5) this.launch();
+    return super.delete;
+  }
+
+  public void throughSwitch(){
+    if(this.through) this.through = false;
+    else this.through = true;
+  }
+
+  public void launch(){
+    for(int i = 0; i < 10; i++)
+      bullets.add(new BulletObj(
+            super.xPos, super.yPos,
+            10,
+            new SimpleBullet(new int[]{color(255, 183, 80, 200)}),
+            new FallMove(
+              10, 36 * i, 0.3f,
+              new StraightBound(
+                0, 0, width, height, 0.8f
+                )
+              )
+            ));
+    super.delete = true;
+  }
+}
+class SimpleBullet extends Figure{
+  SimpleBullet(int[] col){
+    super(col);
+  }
+
+  public void update(float xPos, float yPos, float dia){
+    fill(col[0]);
+    ellipse(xPos, yPos, dia, dia * 2.0f);
+  }
+}
 
 abstract class Figure{
   float dia;
   int[] col;
+  int[] myBulletCol = {color(255, 200, 100, 170), color(255, 200, 255, 170), color(255)};
   Figure(int[] col){
     this.dia = dia;
     this.col = col;
   }
   public abstract void update(float xPos, float yPos, float dia);
+
+  public void toMyBullet(){
+    this.col = this.myBulletCol;
+  }
+
+  public void changeMyBullet(int[] col){
+    this.myBulletCol = col;
+  }
 }
 
 abstract class BulletFigure extends Figure{
@@ -264,22 +425,31 @@ class Information{
   public void update(){
     textAlign(CORNER, CORNER);
     textSize(20);
-    fill(255, 255, 255, 100);
     noStroke();
+    fill(255, 255, 255, 100);
     if(this.hp > 0){
-      rect(10, 10, this.hpBar * this.hp, 20);
-      text((int)hp +" / "+ maxHp, 20, 27);
+      drawHp();
+      drawScore();
     }else{
-      gameEnd = true;
-      text((int)hp +" / "+ maxHp, 20, 27);
-      textAlign(CENTER, CENTER);
-      textSize(50);
-      text("end", width/2, height/2);
+      drawEnd();
     }
   }
 
-  private void test(){
-    println(5);
+  private void drawScore(){
+    text(this.score, 20, 57);
+  }
+
+  private void drawHp(){
+    rect(10, 10, this.hpBar * this.hp, 20);
+    text((int)hp +" / "+ this.maxHp, 20, 27);
+  }
+
+  private void drawEnd(){
+    this.gameEnd = true;
+    text((int)this.hp +" / "+ this.maxHp, 20, 27);
+    textAlign(CENTER, CENTER);
+    textSize(50);
+    text("end", width/2, height/2);
   }
 
   public void damage(float damage){
@@ -288,7 +458,7 @@ class Information{
   }
 
   public void addScore(float score){
-    if(!gameEnd) this.score += score;
+    if(!this.gameEnd) this.score += score;
   }
 }
 class StraightMove extends Move{
@@ -338,8 +508,36 @@ class WaveMove extends Move{
   }
 }
 
+class EvaporateMove extends Move{
+  EvaporateMove(float speed, float angle, float factor, Bound bound){
+    super(speed, angle, factor, bound);
+  }
+  EvaporateMove(float speed){
+    super(speed, 0, 0, new StraightBound(-1, -1, -1, -1, 0));
+  }
+  public float[] action(float[] moveState){
+    moveState[2] -= super.vector2D.speed();
+    return moveState;
+  }
+}
+
+class LimitMove extends Move{
+  int callTime = millis();
+  float limitTime;
+  LimitMove(float speed, float angle, float factor, Bound bound){
+    super(speed, angle, factor, bound);
+  }
+  LimitMove(float limitTime){
+    super(0, 0, 0, new StraightBound(-1, -1, -1, -1, 0));
+    this.limitTime = limitTime * 1000;
+  }
+  public float[] action(float[] moveState){
+    if(millis() - this.callTime > limitTime) moveState[2] = 0;
+    return moveState;
+  }
+}
+
 class FallMove extends Move{
-  float xSpeed, ySpeed;
   FallMove(float speed, float angle, float factor, Bound bound){
     super(speed, angle, factor, bound);
   }
@@ -353,7 +551,6 @@ class FallMove extends Move{
 }
 
 class RiseMove extends Move{
-  float xSpeed, ySpeed;
   RiseMove(float speed, float angle, float factor, Bound bound){
     super(speed, angle, factor, bound);
   }
@@ -366,8 +563,28 @@ class RiseMove extends Move{
   }
 }
 
+class CustomMove extends Move{
+  Move[] moves;
+  CustomMove(float speed, float angle, float factor, Bound bound){
+    super(speed, angle, factor, bound);
+  }
+  CustomMove(Move... moves){
+    super(0, 0, 0, new StraightBound(-1, -1, -1, -1, 0));
+    for(Move m: moves)
+      m.vector2D.speed(m.vector2D.speed() / moves.length);
+    this.moves = moves;
+  }
+  public float[] action(float[] moveState){
+    for(Move m: moves){
+      super.vector2D = m.vector2D;
+      moveState = m.action(moveState);
+    }
+    return moveState;
+  }
+}
 abstract class Obj{
   float xPos, yPos, dia;
+  float callTime = millis();
   Figure figure;
   Move move;
   boolean delete;
@@ -394,6 +611,18 @@ abstract class Obj{
     this.delete = true;
   }
 
+  public float getTime(){
+    return (millis() - this.callTime) / 1000.0f;
+  }
+
+  public void evaporate(float speed){
+    this.dia -= speed;
+  }
+
+  public boolean catchDelete(){
+    return (catchStop() || catchDiaZero() || catchOutOfScreen());
+  }
+
   public boolean catchStop(){
     if(this.move.vector2D.speed() <= 0.1f)
       return true;
@@ -412,6 +641,7 @@ abstract class Obj{
   }
 
   public boolean catchCollision(Obj obj){
+    if(obj == this) return false;
     if(dist(this.xPos, this.yPos, obj.xPos, obj.yPos) < obj.dia/2 + this.dia/2)
       return true;
     return false;
@@ -435,43 +665,89 @@ public void objUpdate(Object arrayList){
 
 class BulletObj extends Obj{
   float damage;
+  boolean myBullet = false;
   BulletObj(float xPos, float yPos, float dia, Figure figure, Move move){
     super(xPos, yPos, dia, figure, move);
-    this.damage = 1;
+    this.damage = 5;
   }
+  BulletObj(){}
   BulletObj(float xPos, float yPos, float dia, Figure figure, Move move, float damage){
     super(xPos, yPos, dia, figure, move);
     this.damage = damage;
   }
   public boolean update(){
-    super.figure.update(super.xPos, super.yPos, super.dia);
-    for(Obj obj: enemys)
-      if(this.catchCollision(obj))
-        for(int i = 0; i < 5; i++){
-          fireSample(super.xPos, super.yPos, 30, new int[]{color(0, 100, 255, 100)});
-          fireSample(super.xPos, super.yPos, 90, new int[]{color(255, 0, 0, 100)});
+    if(this.playerHit()){
+      this.myBullet = true;
+    }
+    this.figureUpdate();
+    if(this.myBullet){
+      super.figure.toMyBullet();
+      for(EnemyObj obj: enemys)
+        if(this.catchCollision(obj)){
+          obj.damage(this.damage);
+          for(int i = 0; i < 5; i++)
+            fireSample(super.xPos, super.yPos, this.dia, figure.col);
           super.delete();
         }
+    }
     super.setMoveState(super.move.action(super.getMoveState()));
-    if(super.catchOutOfScreen())
+    if(super.catchDelete())
       super.delete();
     return super.delete;
+  }
+
+  private boolean playerHit(){
+    for(BarObj player: bars)
+      if(player.catchHit(this)){
+        this.adjustBound(player);
+        return true;
+      }
+    return false;
+  }
+
+  private void normalBound(){
+    super.move.vector2D.yReflect();
+  }
+
+  private void adjustBound(Obj player){
+    super.move.vector2D.angle(degrees(atan2(super.yPos - player.yPos, super.xPos - player.xPos)));
+  }
+
+  private void randomBound(){
+    if(super.move.vector2D.ySpeed() < 0)
+      super.move.vector2D.angle(random(210, 330));
+    else
+      super.move.vector2D.angle(random(30, 150));
+  }
+
+  public void figureUpdate(){
+    pushMatrix();
+    translate(super.xPos, super.yPos);
+    rotate(atan2(super.move.vector2D.ySpeed(), super.move.vector2D.xSpeed()) + radians(90));
+    super.figure.update(0, 0, super.dia);
+    popMatrix();
   }
 }
 
 class EnemyObj extends Obj{
-  float hp, hpBar;
+  float hp, hpBar, maxHp;
+  EnemyObj(){}
   EnemyObj(float xPos, float yPos, float dia, Figure figure, Move move){
     super(xPos, yPos, dia, figure, move);
     this.hp = 5;
     this.hpBar = dia / this.hp;
+    this.maxHp = hp;
   }
   EnemyObj(float xPos, float yPos, float dia, Figure figure, Move move, float hp){
     super(xPos, yPos, dia, figure, move);
     this.hp = hp;
     this.hpBar = dia / this.hp;
+    this.maxHp = hp;
   }
   public boolean update(){
+    /* for(Obj obj: enemys){ */
+    /*   if(catchCollision(obj)) super.move.vector2D.rotation(180); */
+    /* } */
     super.figure.update(super.xPos, super.yPos, super.dia);
     this.drawLife();
     super.setMoveState(super.move.action(super.getMoveState()));
@@ -481,7 +757,17 @@ class EnemyObj extends Obj{
   }
   public void drawLife(){
     fill(255, 170);
-    rect(super.xPos - super.dia/2, super.yPos + super.dia/2, super.dia, 10);
+    rect(super.xPos - super.dia/2, super.yPos + super.dia/2, this.hpBar * this.hp, 10);
+  }
+  public void damage(float damage){
+    this.hp -= damage;
+    if(this.hp <= 0){
+      this.hp = 0;
+      inf.addScore(this.maxHp);
+      for(int i = 0; i < 5; i++)
+        fireSample(super.xPos, super.yPos, this.dia, figure.col);
+      super.delete();
+    }
   }
 }
 
@@ -499,9 +785,39 @@ class ParticleObj extends Obj{
   }
 }
 
-abstract class BarObj extends Obj{
-  BarObj(float xPos, float yPos, float dia, Figure figure, Move move){
+class BarObj extends Obj{
+  BarObj(){}
+  BarObj(float xPos, float yPos, float dia, BarFigure figure){
+    super(xPos, yPos, dia, figure, stopMove());
+  }
+  BarObj(float xPos, float yPos, float dia, BarFigure figure, Move move){
     super(xPos, yPos, dia, figure, move);
+  }
+  public boolean update(){
+    super.figure.update(super.xPos, super.yPos, super.dia);
+    return super.delete;
+  }
+
+  public void leftDisplace(float speed){
+    super.xPos -= speed;
+    if(super.xPos < dia/2) super.xPos = dia/2;
+  }
+
+  public void rightDisplace(float speed){
+    super.xPos += speed;
+    if(width - super.dia/2 < super.xPos) super.xPos = width - super.dia/2;
+  }
+
+  public boolean catchHit(Obj obj){
+    if(obj.yPos + obj.dia/2 + obj.move.vector2D.ySpeed() > super.yPos - 5 && 
+        obj.yPos - obj.dia/2 + obj.move.vector2D.ySpeed() < super.yPos + 5 && 
+        obj.xPos > super.xPos - super.dia/2 && 
+        obj.xPos < super.xPos + super.dia/2){
+      if(0 <= obj.move.vector2D.ySpeed()) obj.yPos = super.yPos - 10;
+      else obj.yPos = super.yPos + 10;
+      return true;
+    }
+    return false;
   }
 }
 class EvaporationParticle extends ParticleObj{
@@ -545,7 +861,7 @@ class Ellipse extends ParticleFigure{
   }
   public void update(float xPos, float yPos, float dia){
     noStroke();
-    fill(col[0]);
+    fill(super.col[0]);
     ellipse(xPos, yPos, dia, dia);
   }
 }
@@ -577,6 +893,15 @@ public void evaporationSample(float xPos, float yPos, float dia, int[] col){
           new Ellipse(col)
           ));
   }
+}
+abstract class Skill{
+  String name;
+}
+
+class EnemySkill extends Skill{
+}
+
+class MySkill extends Skill{
 }
   static public void main(String[] passedArgs) {
     String[] appletArgs = new String[] { "Main" };

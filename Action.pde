@@ -46,22 +46,26 @@ abstract class Bound extends Action{
     float angle = (float)super.vector2D.angle();
     moveState[2] /= 2;
     if(90 <= angle && angle < 270){
-      if(leftEnd != -1 && moveState[0] <= leftEnd + moveState[2]){
+      if(leftEnd != -1 && moveState[0] <= leftEnd + moveState[2] - super.vector2D.xSpeed()){
+        moveState[0] = moveState[2];
         vector2D.setPolar(speed * coefficient, this.left(angle));
       }
     }
     if(180 <= angle && angle < 360){
-      if(topEnd != -1 && moveState[1] <= topEnd + moveState[2]){
+      if(topEnd != -1 && moveState[1] <= topEnd + moveState[2] - super.vector2D.ySpeed()){
+        moveState[1] = moveState[2];
         vector2D.setPolar(speed * coefficient, this.top(angle));
       }
     }
     if((270 <= angle && angle < 360) || (0 <= angle && angle < 90)){
-      if(rightEnd != -1 && rightEnd - moveState[2] <= moveState[0]){
+      if(rightEnd != -1 && rightEnd - moveState[2] - super.vector2D.xSpeed() <= moveState[0]){
+        moveState[0] = width - moveState[2];
         vector2D.setPolar(speed * coefficient, this.right(angle));
       }
     }
     if(0 <= angle && angle < 180){
-      if(bottomEnd != -1 && bottomEnd - moveState[2] <= moveState[1]){
+      if(bottomEnd != -1 && bottomEnd - moveState[2] - super.vector2D.ySpeed() <= moveState[1]){
+        moveState[1] = height - moveState[2];
         vector2D.setPolar(speed * coefficient, this.bottom(angle));
       }
     }
